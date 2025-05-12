@@ -1,0 +1,6 @@
+[submodule "tabpfn-extensions"]
+	path = tabpfn-extensions
+	url = https://github.com/PriorLabs/tabpfn-extensions.git
+[submodule "deepcore"]
+	path = deepcore
+	url = https://github.com/PatrickZH/DeepCore.git
