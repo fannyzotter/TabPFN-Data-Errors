@@ -4,10 +4,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tabpfn import TabPFNClassifier
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../tabpfn-extensions/src')))
 from tabpfn_extensions.post_hoc_ensembles.sklearn_interface import AutoTabPFNClassifier, AutoTabPFNRegressor
 
 # CSV-Datei laden
-df = pd.read_csv("archive/XAI_Drilling_Dataset.csv")
+df = pd.read_csv("datasets/XAI_Drilling_Dataset.csv")
 
 # Relevante Features und Zielvariable auswählen
 features = ["Cutting speed vc [m/min]", "Spindle speed n [1/min]", "Feed f [mm/rev]", "Feed rate vf [mm/min]", "Power Pc [kW]", "Cooling [%]"]
@@ -28,7 +32,7 @@ X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
 # TabPFN-Modell initialisieren und trainieren
-clf = TabPFNClassifier(device='cpu', ignore_pretraining_limits=True)  # 'cuda' für GPU-Unterstützung
+clf = TabPFNClassifier(device='cuda', ignore_pretraining_limits=True)  # 'cuda' für GPU-Unterstützung
 clf.fit(X_train, y_train)
 
 # Vorhersagen treffen
