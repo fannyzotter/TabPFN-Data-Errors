@@ -4,8 +4,8 @@ import random
 
 # Parameter
 input_root = "../datasets"                  # Eingabe-Ordner mit CSV-Dateien
-output_root = "../subsets"              # Zielordner für Subsets
-n_subsets = 10                         # Anzahl zufälliger Subsets pro Datei
+output_root = "../randomSubsets"              # Zielordner für Subsets
+n_subsets = 1                         # Anzahl zufälliger Subsets pro Datei
 subset_size = 10000                   # Zeilen pro Subset
 
 # Gehe rekursiv durch alle Ordner und suche CSV-Dateien
