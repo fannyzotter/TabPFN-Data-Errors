@@ -2,9 +2,18 @@ import pandas as pd
 from scipy.io import arff
 from badgers.generators.tabular_data.noise import GaussianNoiseGenerator
 from badgers.generators.tabular_data.missingness import MissingCompletelyAtRandom
-from badgers.generators.tabular_data.outliers import LowDensitySamplingGenerator
+from badgers.generators.tabular_data.outliers import HypersphereSamplingGenerator
+#from badgers.generators.tabular_data.imbalance import RandomSamplingClassesGenerator
+
 from numpy.random import default_rng
 from pathlib import Path
+
+import sys
+#gehe eine ebene runter
+sys.path.append("..") 
+from external.badgers.badgers.generators.tabular_data.imbalance import RandomUniqueBinaryClassesGenerator
+
+
 
 def MyGaussianNoiseGenerator(X, y, noise_levels, target_col, output_dir, prefix):
     for std in noise_levels:
@@ -26,28 +35,46 @@ def MyMissingCompletelyAtRandom(X, y, missing_values, target_col, output_dir, pr
 
 def MyOutlierGenerator(X, y, percent_outliers, target_col, output_dir, prefix):
     for num in percent_outliers:
-        # number of outliers by set size
         number_outliers = int(num * len(X))
-        transformer = LowDensitySamplingGenerator(random_generator=default_rng(42))
-        Xo, _ = transformer.generate(X.copy(), y=y, n_outliers=number_outliers)
-        df_outliers = pd.DataFrame(Xo)
+        transformer = HypersphereSamplingGenerator(random_generator=default_rng(42))
+        Xo, Y0 = transformer.generate(X.copy(), y=y, n_outliers=number_outliers)
+        df_outliers = pd.DataFrame(Xo, columns=X.columns)
         df_outliers[target_col] = y
-        filename = output_dir / f"{prefix}_Outlier_std{int(num)}.csv"
-        #add outliers ot whole dataset
-        df_outliers = pd.concat([df_outliers, X], ignore_index=True)
-        df_outliers[target_col] = pd.concat([df_outliers[target_col], y], ignore_index=True)
-        #save
+        X[target_col] = y
+        df_outliers = pd.concat([X, df_outliers], ignore_index=True)
+        filename = output_dir / f"{prefix}_Outlier_std{int(num*100):02}.csv"
         df_outliers.to_csv(filename, index=False)
+
+# classimbalancedness
+
+def MyRandomSamplingClassesGenerator(X, y, imbalance_levels, target_col, output_dir, prefix):
+    if len(y.unique()) == 2:
+        #see what class has more instances
+        class_counts = y.value_counts()
+        for imbalance in imbalance_levels:
+            if class_counts.iloc[0] > class_counts.iloc[1]:
+                proportion_classes = {y.unique()[0]:imbalance[0], y.unique()[1]:imbalance[1]}
+            else:
+                proportion_classes = {y.unique()[0]:imbalance[1], y.unique()[1]:imbalance[0]}
+            transformer = RandomUniqueBinaryClassesGenerator(random_generator=default_rng(42))
+            X_imbalanced, y_imbalanced = transformer.generate(X.copy(), y, proportion_classes=proportion_classes)
+            df_imbalanced = X_imbalanced.copy()
+            df_imbalanced[target_col] = y_imbalanced
+            filename = output_dir / f"{prefix}_ClassImbalancedness_ratio{(imbalance[1]/imbalance[0]):.2f}.csv"
+            df_imbalanced.to_csv(filename, index=False)
+    else:
+        print(f"Skipping {prefix} as it does not have exactly two classes for imbalance generation.")
 
 if __name__ == "__main__":
 
     ALL_PERCANTAGES = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     NOISE_LEVELS = [0.1, 0.25, 0.5, 0.75]
     MISSING_VALUES = [0.1, 0.2, 0.3, 0.5]
-    OUTLIER_PERCENT = [0.1, 0.25, 0.5, 0.75]
+    OUTLIER_PERCENT = [0.05, 0.1, 0.2, 0.3]
+    IMBALANCE_LEVELS = [[0.5, 0.5], [0.55, 0.45], [0.6, 0.4], [0.65, 0.35], [0.7, 0.3], [0.75, 0.25], [0.8, 0.2], [0.85, 0.15], [0.9, 0.1] , [0.95, 0.05]]
 
-    base_dir = Path('../datasets')
-    for arff_path in base_dir.glob('*/**/*original*.arff'):
+    base_dir = Path('../datasets/')
+    for arff_path in base_dir.glob('*/**/Australian.arff'):
         data, meta = arff.loadarff(arff_path)
         df = pd.DataFrame(data)
     
@@ -63,6 +90,7 @@ if __name__ == "__main__":
         y = df[target_col]
 
         # Apply all noise types
-        #MyGaussianNoiseGenerator(X, y, NOISE_LEVELS, target_col, output_dir, prefix)
-        #MyMissingCompletelyAtRandom(X, y, MISSING_VALUES, target_col, output_dir, prefix)
-        MyOutlierGenerator(X, y, OUTLIER_PERCENT, target_col, output_dir, prefix)
+        #MyGaussianNoiseGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+        #MyMissingCompletelyAtRandom(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+        #MyOutlierGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+        MyRandomSamplingClassesGenerator(X, y, IMBALANCE_LEVELS, target_col, output_dir, prefix)

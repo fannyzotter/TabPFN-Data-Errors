@@ -4,3 +4,12 @@
 [submodule "deepcore"]
 	path = deepcore
 	url = https://github.com/PatrickZH/DeepCore.git
+[submodule "external/badgers"]
+	path = external/badgers
+	url = https://github.com/fannyzotter/badgers-fork-classImbalance.git
+[submodule "code/tabpfn_iml"]
+	path = code/tabpfn_iml
+	url = https://github.com/david-rundel/tabpfn_iml.git
+[submodule "external/tabpfn_iml"]
+	path = external/tabpfn_iml
+	url = https://github.com/david-rundel/tabpfn_iml.git

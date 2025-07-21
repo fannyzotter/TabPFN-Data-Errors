@@ -2,7 +2,7 @@ import arff
 import pandas as pd
 
 path = '/home/zotter/fanny/TabPFN-Data-Errors/datasets/'
-name = 'aps_failure'
+name = '...'
 version = '_v1'
 
 # .arff-Datei laden

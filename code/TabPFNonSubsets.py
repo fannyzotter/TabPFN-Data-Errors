@@ -10,10 +10,11 @@ from tabpfn import TabPFNClassifier
 
 # Parameter
 #input_root = "../randomSubsets/numerai28.6"
-input_root = "../randomSubsets/PhishingWebsites"
-logfile_path = "../results/log.csv"
+#input_root = "../randomSubsets/PhishingWebsites"
+input_root = "../randomSubsets/Australian"
+logfile_path = "../results/AusLog10Samples.csv"
 test_size = 0.2
-timeout_sec = 300  # Max. Laufzeit pro Subset in Sekunden
+timeout_sec = 10  # Max. Laufzeit pro Subset in Sekunden
 
 # Logdatei mit Header erzeugen, falls nicht vorhanden
 if not os.path.exists(logfile_path):
@@ -31,10 +32,15 @@ def run_tabpfn(X_train, y_train, X_test, queue):
 
 # Hauptloop über alle Subsets
 for dirpath, _, filenames in os.walk(input_root):
+    # only go in directories that start with australian_Class
+    if not os.path.basename(dirpath).startswith("Australian_"):
+        continue
     for file in filenames:
-        if not file.endswith("_1.csv"):
+        if file.endswith("_logged.csv"):
+            print(f"⚠️ Überspringe {file} – bereits geloggt.")
             continue
-
+        if not file.endswith(".csv"):
+            continue
         subset_path = os.path.join(dirpath, file)
         subset_name = os.path.splitext(file)[0]
         dataset = os.path.basename(os.path.dirname(dirpath))
@@ -79,6 +85,6 @@ for dirpath, _, filenames in os.walk(input_root):
             duration = ""
             status = "error"
             print(f"⚠️ Fehler bei {subset_path}")
-
+        #change name of original datasetfile(add _logged)
         with open(logfile_path, "a") as f:
             f.write(f"{dataset},{subset_path},{subset_name},{df.shape[0]},{df.shape[1]-1},{acc},{duration},{status}\n")
