@@ -60,7 +60,7 @@ def MyRandomSamplingClassesGenerator(X, y, imbalance_levels, target_col, output_
             X_imbalanced, y_imbalanced = transformer.generate(X.copy(), y, proportion_classes=proportion_classes)
             df_imbalanced = X_imbalanced.copy()
             df_imbalanced[target_col] = y_imbalanced
-            filename = output_dir / f"{prefix}_ClassImbalancedness_ratio{(imbalance[1]/imbalance[0]):.2f}.csv"
+            filename = output_dir / f"{prefix}_ClassImbalancedness_ratio{int((imbalance[1]/imbalance[0]*100)):02}.csv"
             df_imbalanced.to_csv(filename, index=False)
     else:
         print(f"Skipping {prefix} as it does not have exactly two classes for imbalance generation.")

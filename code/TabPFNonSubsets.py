@@ -4,22 +4,23 @@ import pandas as pd
 import numpy as np
 from multiprocessing import Process, Queue
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-
+import sklearn.metrics as metrics
 from tabpfn import TabPFNClassifier
 
 # Parameter
 #input_root = "../randomSubsets/numerai28.6"
 #input_root = "../randomSubsets/PhishingWebsites"
-input_root = "../randomSubsets/Australian"
-logfile_path = "../results/AusLog10Samples.csv"
+#input_root = "../randomSubsets/Australian"
+input_root = "../kCenterSubsets/Australian"
+input_root = "../knnShapleySubsets/Australian"
+logfile_path = "../results/knnShapley/AusLogknnShapley.csv"
 test_size = 0.2
 timeout_sec = 10  # Max. Laufzeit pro Subset in Sekunden
 
 # Logdatei mit Header erzeugen, falls nicht vorhanden
 if not os.path.exists(logfile_path):
     with open(logfile_path, "w") as f:
-        f.write("dataset,subset_path,subset_name,n_samples,n_features,test_acc,inference_time_sec,status\n")
+        f.write("dataset,subset_path,subset_name,n_samples,n_features,test_acc,balanced_acc,precision,recall,f1,roc_auc,mcc,kappa,log_loss,inference_time_sec,status\n")
 
 # Funktion für separaten Subprozess
 def run_tabpfn(X_train, y_train, X_test, queue):
@@ -33,12 +34,10 @@ def run_tabpfn(X_train, y_train, X_test, queue):
 # Hauptloop über alle Subsets
 for dirpath, _, filenames in os.walk(input_root):
     # only go in directories that start with australian_Class
-    if not os.path.basename(dirpath).startswith("Australian_"):
+    print(f"Verarbeite Verzeichnis: {dirpath}")
+    if not os.path.basename(dirpath).startswith("Australi"):
         continue
     for file in filenames:
-        if file.endswith("_logged.csv"):
-            print(f"⚠️ Überspringe {file} – bereits geloggt.")
-            continue
         if not file.endswith(".csv"):
             continue
         subset_path = os.path.join(dirpath, file)
@@ -74,17 +73,39 @@ for dirpath, _, filenames in os.walk(input_root):
             print(f"⏱️ Timeout bei {subset_path}")
             status = "timeout"
             acc = ""
+            balanced_acc = ""
+            precision = ""
+            recall = ""
+            f1 = ""
+            roc_auc = ""
+            mcc = ""
+            kappa = "" 
             duration = timeout_sec
         elif not queue.empty():
             y_pred, duration = queue.get()
-            acc = accuracy_score(y_test, y_pred)
+            acc = metrics.accuracy_score(y_test, y_pred)
+            balanced_acc = metrics.balanced_accuracy_score(y_test, y_pred)
+            precision = metrics.precision_score(y_test, y_pred, average="binary")
+            recall = metrics.recall_score(y_test, y_pred, average="binary")
+            f1 = metrics.f1_score(y_test, y_pred, average="binary")
+            roc_auc = metrics.roc_auc_score(y_test, y_pred)
+            mcc = metrics.matthews_corrcoef(y_test, y_pred)
+            kappa = metrics.cohen_kappa_score(y_test, y_pred)
             status = "ok"
             print(f"✅ {subset_name}: acc={acc:.4f}, time={duration:.2f}s")
         else:
             acc = ""
+            balanced_acc = ""
+            precision = ""
+            recall = ""
+            f1 = ""
+            roc_auc = ""
+            mcc = ""
+            kappa = ""
             duration = ""
             status = "error"
             print(f"⚠️ Fehler bei {subset_path}")
         #change name of original datasetfile(add _logged)
         with open(logfile_path, "a") as f:
-            f.write(f"{dataset},{subset_path},{subset_name},{df.shape[0]},{df.shape[1]-1},{acc},{duration},{status}\n")
+            f.write(f"{dataset},{subset_path},{subset_name},{df.shape[0]},{df.shape[1]-1},{acc},{balanced_acc},{precision},{recall},{f1},{roc_auc},{mcc},{kappa},{duration},{status}\n")
+
