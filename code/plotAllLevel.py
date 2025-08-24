@@ -29,9 +29,9 @@ grouped = df.groupby(['type', 'level'])[score_cols].mean().reset_index()
 subset = grouped[grouped['type'] == 'Outlier']
 plt.figure(figsize=(10, 6))
 for col in score_cols:
-    plt.plot(subset['level'], subset[col], marker='o', label=col)
+    plt.plot(subset['level'].to_numpy()/2, subset[col].to_numpy(), marker='o', label=col)
 plt.title("Outlier: Scores vs. Level")
-plt.xlabel("Noise Level (std %)")
+plt.xlabel("Outlier Level (%)")
 plt.ylabel("Score")
 plt.legend()
 plt.grid(True)
@@ -42,7 +42,7 @@ plt.show()
 subset = grouped[grouped['type'] == 'GaussianFeatureNoise']
 plt.figure(figsize=(10, 6))
 for col in score_cols:
-    plt.plot(subset['level'], subset[col], marker='o', label=col)
+    plt.plot(subset['level'].to_numpy(), subset[col].to_numpy(), marker='o', label=col)
 plt.title("Gaussian Feature Noise: Scores vs. Level")
 plt.xlabel("Noise Level (std %)")
 plt.ylabel("Score")
@@ -55,7 +55,7 @@ plt.show()
 subset = grouped[grouped['type'] == 'MissingCompletely']
 plt.figure(figsize=(10, 6))
 for col in score_cols:
-    plt.plot(subset['level'], subset[col], marker='o', label=col)
+    plt.plot(subset['level'].to_numpy(), subset[col].to_numpy(), marker='o', label=col)
 plt.title("Missing Completely: Scores vs. Level")
 plt.xlabel("Missing Ratio (%)")
 plt.ylabel("Score")
@@ -68,7 +68,7 @@ plt.show()
 subset = grouped[grouped['type'] == 'ClassImbalancedness']
 plt.figure(figsize=(10, 6))
 for col in score_cols:
-    plt.plot(subset['level'], subset[col], marker='o', label=col)
+    plt.plot(subset['level'].to_numpy()/100, subset[col].to_numpy(), marker='o', label=col)
 plt.title("Class Imbalancedness: Scores vs. Level")
 plt.xlabel("Class Ratio")
 plt.ylabel("Score")
