@@ -1,53 +1,28 @@
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from tabpfn import TabPFNClassifier
-
-import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../tabpfn-extensions/src')))
-from tabpfn_extensions.post_hoc_ensembles.sklearn_interface import AutoTabPFNClassifier, AutoTabPFNRegressor
+import pandas as pd
+from pathlib import Path
+import sys 
 
-# CSV-Datei laden
-df = pd.read_csv("datasets/XAI_Drilling_Dataset.csv")
+# Importiere alle Module
+from convertARFFtoCSV import initialize_datasets
+from createBadgersDatasets import apply_noise_and_save
+#import TabPFNonSubsets
+from kCenterGreedy import create_kcenter_subsets
+ #import knnShapely
+from randomSubset import create_random_subsets
 
-# Relevante Features und Zielvariable auswählen
-features = ["Cutting speed vc [m/min]", "Spindle speed n [1/min]", "Feed f [mm/rev]", "Feed rate vf [mm/min]", "Power Pc [kW]", "Cooling [%]"]
-target = "Main Failure"
+def main():
+    new_dataset_names = initialize_datasets(Path(os.getcwd()).parent)
 
-X = df[features].values
-y = df[target].values
+    print(f"Neue Datensätze erkannt: {new_dataset_names}")
+    
+    # Falls du nur mit neuen weiterarbeiten willst:
+    for name in new_dataset_names:
+        #apply_noise_and_save(name, Path(os.getcwd()).parent)
+        # create subsets
+        #create_random_subsets(name, Path(os.getcwd()).parent, n_subsets=3, subset_size=500)
 
-if len(X) > 5000:
-    X, y = X[:5000], y[:5000]
+        create_kcenter_subsets(name, Path(os.getcwd()).parent, k=500)
 
-# Datensatz aufteilen
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Daten skalieren
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-# TabPFN-Modell initialisieren und trainieren
-clf = TabPFNClassifier(device='cuda', ignore_pretraining_limits=True)  # 'cuda' für GPU-Unterstützung
-clf.fit(X_train, y_train)
-
-# Vorhersagen treffen
-y_pred = clf.predict(X_test)
-
-# Ergebnisse anzeigen
-print("Vorhersagen:", y_pred)
-
-# Accuracy Measures berechnen
-accuracy = accuracy_score(y_test, y_pred)
-precision = precision_score(y_test, y_pred)
-recall = recall_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
-
-print(f"Accuracy: {accuracy:.4f}")
-print(f"Precision: {precision:.4f}")
-print(f"Recall: {recall:.4f}")
-print(f"F1-Score: {f1:.4f}")
+if __name__ == "__main__":
+    main()

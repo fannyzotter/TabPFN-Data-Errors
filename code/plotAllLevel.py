@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import re
 
 # CSV-Datei laden
-df = pd.read_csv("../results/kCenter/AusLogkCenter1.csv")
+df = pd.read_csv("../results/knnShapley/AusLogknnShapley.csv")
 
 # Zeilen mit fehlender Accuracy ignorieren
 df = df.dropna(subset=["test_acc"])

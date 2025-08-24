@@ -65,32 +65,31 @@ def MyRandomSamplingClassesGenerator(X, y, imbalance_levels, target_col, output_
     else:
         print(f"Skipping {prefix} as it does not have exactly two classes for imbalance generation.")
 
-if __name__ == "__main__":
-
-    ALL_PERCANTAGES = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+def apply_noise_and_save(dataset_name: str, rootPath: Path):
+    # Parameter
+    ALL_PERCANTAGES = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
     NOISE_LEVELS = [0.1, 0.25, 0.5, 0.75]
     MISSING_VALUES = [0.1, 0.2, 0.3, 0.5]
     OUTLIER_PERCENT = [0.05, 0.1, 0.2, 0.3]
-    IMBALANCE_LEVELS = [[0.5, 0.5], [0.55, 0.45], [0.6, 0.4], [0.65, 0.35], [0.7, 0.3], [0.75, 0.25], [0.8, 0.2], [0.85, 0.15], [0.9, 0.1] , [0.95, 0.05]]
+    IMBALANCE_LEVELS = [[0.5, 0.5], [0.55, 0.45], [0.6, 0.4], [0.65, 0.35], [0.7, 0.3], [0.75, 0.25], [0.8, 0.2], [0.85, 0.15], [0.9, 0.1], [0.95, 0.05]]
 
-    base_dir = Path('../datasets/')
-    for arff_path in base_dir.glob('*/**/Australian.arff'):
-        data, meta = arff.loadarff(arff_path)
-        df = pd.DataFrame(data)
-    
-        for col in df.select_dtypes(include=['object']).columns:
-            df[col] = df[col].str.decode('utf-8')
-    
-        output_dir = arff_path.parent
-        prefix = arff_path.stem.replace('_original', '')
+    output_dir = rootPath / "datasets" / dataset_name
+    dataset_path = output_dir / f"{dataset_name}_original.csv"
+    print(f"Processing dataset: {dataset_path}")
+    if not dataset_path.exists():
+        print(f"Original CSV für {dataset_name} nicht gefunden: {dataset_path}")
+        return
 
-        # Try to infer target column (last column is common)
-        target_col = df.columns[-1]
-        X = df.drop(columns=target_col)
-        y = df[target_col]
+    df = pd.read_csv(dataset_path)
+    target_col = df.columns[-1]
+    X = df.drop(columns=target_col)
+    y = df[target_col]
+    prefix = f"{dataset_name}"
 
-        # Apply all noise types
-        #MyGaussianNoiseGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
-        #MyMissingCompletelyAtRandom(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
-        #MyOutlierGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
-        MyRandomSamplingClassesGenerator(X, y, IMBALANCE_LEVELS, target_col, output_dir, prefix)
+    # Beispiel: nur eine der Transformationen aktiviert
+    # Du kannst beliebige davon aktivieren/deaktivieren
+
+    MyGaussianNoiseGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+    MyMissingCompletelyAtRandom(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+    MyOutlierGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+    MyRandomSamplingClassesGenerator(X, y, IMBALANCE_LEVELS, target_col, output_dir, prefix)
