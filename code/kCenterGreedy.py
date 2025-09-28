@@ -12,7 +12,6 @@ def k_center_greedy(X, k):
     while len(idx) < k:
         _, distances = pairwise_distances_argmin_min(X, X[idx])
         idx.append(np.argmax(distances))
-        print(size(idx))
     return np.array(idx)
 
 def create_kcenter_subsets(dataset_name, base_path, k=500):
