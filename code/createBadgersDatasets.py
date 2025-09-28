@@ -1,9 +1,15 @@
+###########################################
+# Script to create datasets with various types of noise using the Badgers library
+# last updated: 1.9.25
+# last state: all the error level are final 
+# notes: only for binary classification? did i look at regression?
+############################################
+
 import pandas as pd
 from scipy.io import arff
 from badgers.generators.tabular_data.noise import GaussianNoiseGenerator
 from badgers.generators.tabular_data.missingness import MissingCompletelyAtRandom
 from badgers.generators.tabular_data.outliers import HypersphereSamplingGenerator
-#from badgers.generators.tabular_data.imbalance import RandomSamplingClassesGenerator
 
 from numpy.random import default_rng
 from pathlib import Path
@@ -12,8 +18,6 @@ import sys
 #gehe eine ebene runter
 sys.path.append("..") 
 from external.badgers.badgers.generators.tabular_data.imbalance import RandomUniqueBinaryClassesGenerator
-
-
 
 def MyGaussianNoiseGenerator(X, y, noise_levels, target_col, output_dir, prefix):
     for std in noise_levels:
@@ -68,10 +72,10 @@ def MyRandomSamplingClassesGenerator(X, y, imbalance_levels, target_col, output_
 def apply_noise_and_save(dataset_name: str, rootPath: Path):
     # Parameter
     ALL_PERCANTAGES = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
-    NOISE_LEVELS = [0.1, 0.25, 0.5, 0.75]
-    MISSING_VALUES = [0.1, 0.2, 0.3, 0.5]
-    OUTLIER_PERCENT = [0.05, 0.1, 0.2, 0.3]
-    IMBALANCE_LEVELS = [[0.5, 0.5], [0.55, 0.45], [0.6, 0.4], [0.65, 0.35], [0.7, 0.3], [0.75, 0.25], [0.8, 0.2], [0.85, 0.15], [0.9, 0.1], [0.95, 0.05]]
+    NOISE_LEVELS = [0.1, 0.3, 0.5]
+    MISSING_VALUES = [0.1, 0.3, 0.5]
+    OUTLIER_PERCENT = [0.2, 0.6, 1]
+    IMBALANCE_LEVELS = [[0.5, 0.5], [0.67, 0.33], [0.95, 0.05]]
 
     output_dir = rootPath / "datasets" / dataset_name
     dataset_path = output_dir / f"{dataset_name}_original.csv"
@@ -89,7 +93,7 @@ def apply_noise_and_save(dataset_name: str, rootPath: Path):
     # Beispiel: nur eine der Transformationen aktiviert
     # Du kannst beliebige davon aktivieren/deaktivieren
 
-    MyGaussianNoiseGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
-    MyMissingCompletelyAtRandom(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
-    MyOutlierGenerator(X, y, ALL_PERCANTAGES, target_col, output_dir, prefix)
+    MyGaussianNoiseGenerator(X, y, NOISE_LEVELS, target_col, output_dir, prefix)
+    MyMissingCompletelyAtRandom(X, y, MISSING_VALUES, target_col, output_dir, prefix)
+    MyOutlierGenerator(X, y, OUTLIER_PERCENT, target_col, output_dir, prefix)
     MyRandomSamplingClassesGenerator(X, y, IMBALANCE_LEVELS, target_col, output_dir, prefix)

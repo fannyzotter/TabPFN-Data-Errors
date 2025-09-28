@@ -6,11 +6,13 @@ from pathlib import Path
 import os
 
 def k_center_greedy(X, k):
+    print("kcenter")
     """Implementiert den k-Center Greedy Algorithmus für Subset Selection"""
     idx = [np.random.randint(len(X))]
     while len(idx) < k:
         _, distances = pairwise_distances_argmin_min(X, X[idx])
         idx.append(np.argmax(distances))
+        print(size(idx))
     return np.array(idx)
 
 def create_kcenter_subsets(dataset_name, base_path, k=500):
@@ -31,6 +33,7 @@ def create_kcenter_subsets(dataset_name, base_path, k=500):
     # Iteriere über alle CSV-Dateien im Dataset-Ordner
     for filename in os.listdir(input_path):
         if not filename.endswith(".csv"):
+            print('no file under this filename')
             continue
 
         file_path = input_path / filename
@@ -38,9 +41,11 @@ def create_kcenter_subsets(dataset_name, base_path, k=500):
 
         # continie if file already exists
         if out_file.exists():
+            print('out_file')
             continue
 
         try:
+            print('try')
             df = pd.read_csv(file_path)
 
             # Features und Label trennen (Label = letzte Spalte)

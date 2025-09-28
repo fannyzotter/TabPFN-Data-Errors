@@ -1,5 +1,5 @@
 from pathlib import Path
-import arff
+from scipy.io import arff
 import pandas as pd
 
 def initialize_datasets(rootpath: Path):
@@ -17,11 +17,19 @@ def initialize_datasets(rootpath: Path):
             dataset_folder.mkdir()
             # .arff-Datei laden
             with open(arff_file) as f:
-                dataset = arff.load(f)
-            df = pd.DataFrame(dataset['data'], columns=[attr[0] for attr in dataset['attributes']])
+                dataset = arff.loadarff(f)
+                print(f"Loaded ARFF file: {arff_file}")
+                print(dataset.count)
+            df = pd.DataFrame(dataset[0])
+            df = df.applymap(lambda x: x.decode("utf-8") if isinstance(x, bytes) else x)
+            df = df.astype(int)
+
+            print(f"Converted ARFF to DataFrame with shape: {df.shape}")
+            print(df.head())
+
             # Als .csv speichern
             csv_path = dataset_folder / f"{name}_original.csv"
             df.to_csv(csv_path, index=False)
-        new_datasets.append(name)
+            new_datasets.append(name)
 
     return new_datasets

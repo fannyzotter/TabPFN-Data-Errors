@@ -1,3 +1,10 @@
+#################################################
+# Script der score je level  plotts 
+# last updated: 1.9.25
+# last state: working plots as is in final thesis
+# notes: maybe text size in plots a bit small
+#################################################
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import re

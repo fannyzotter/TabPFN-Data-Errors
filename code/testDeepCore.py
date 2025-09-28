@@ -8,10 +8,10 @@ import torch.nn as nn
 # 1. CSV-Daten laden
 df = pd.read_csv("archive/XAI_Drilling_Dataset.csv")
 
-# 2. Features und Labels extrahieren
-features = ["Cutting speed vc [m/min]", "Spindle speed n [1/min]", "Feed f [mm/rev]",
-            "Feed rate vf [mm/min]", "Power Pc [kW]", "Cooling [%]"]
-target = "Main Failure"
+# features are in the first line 
+features = df.columns[:-1]  # Alle Spalten außer der letzten
+target = df.columns[-1]     # Letzte Spalte als Zielvariable
+
 
 X = df[features].values
 y = LabelEncoder().fit_transform(df[target].values)
