@@ -47,10 +47,13 @@ def logfile_path(dataset_name, method):
 
 # Funktion für separaten Subprozess
 def run_tabpfn(X_train, y_train, X_test):
-    clf = TabPFNClassifier(device="cuda")
+    clf = TabPFNClassifier(device="cuda", n_estimators=4)
     start_time = time.time()
     clf.fit(X_train, y_train)
+    emb = clf.get_embeddings(X_test, data_source="test")
+    print("Embeddings shape:", emb.shape)
     y_pred = clf.predict(X_test)
+    y_proba = clf.predict_proba(X_test)
     duration = time.time() - start_time
     return y_pred, duration
 

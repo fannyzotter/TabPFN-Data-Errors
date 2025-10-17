@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from sklearn.preprocessing import LabelEncoder
-from deepcore.methods import k_center_greedy
+from external.deepcore.deepcore.methods import k_center_greedy
 import torch.nn as nn
 import os
 
@@ -18,7 +18,6 @@ class TabularDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
 
-dataset = TabularDataset(X, y)
 
 # 4. Einfaches MLP-Modell definieren
 class SimpleMLP(nn.Module):
@@ -47,7 +46,7 @@ def run_deepcore_subset(dataset_name, base_path, fraction=0.5):
             continue
 
         file_path = input_path / filename
-        out_file = output_path / filename.replace(".csv", f"_kcenter{k}.csv")
+        out_file = output_path / filename.replace(".csv", f"_kcenter.csv")
 
         try:
             df = pd.read_csv(file_path)
