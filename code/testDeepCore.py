@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from sklearn.preprocessing import LabelEncoder
-from external.deepcore.deepcore.methods import k_center_greedy
+#from external.deepcore.deepcore.methods import k_center_greedy
 import torch.nn as nn
 import os
 
@@ -60,15 +60,15 @@ def run_deepcore_subset(dataset_name, base_path, fraction=0.5):
             dataset = TabularDataset(X, y)
             model = SimpleMLP(input_dim=X.shape[1], num_classes=len(set(y)))
 
-            selector = k_center_greedy(model=model, dataset=dataset, fraction=fraction)
-            selected_indices = selector.select()
-            print(f"Selected {len(selected_indices)} samples using DeepCore.")
-            #save coreset to csv
-            coreset_df = pd.DataFrame(X[selected_indices], columns=features)
-            coreset_df[target] = y[selected_indices]
-
-            coreset_df.to_csv(out_file, index=False)
-            print(f"DeepCore subset saved to {out_file}")
+#            selector = k_center_greedy(model=model, dataset=dataset, fraction=fraction)
+#            selected_indices = selector.select()
+#            print(f"Selected {len(selected_indices)} samples using DeepCore.")
+#            #save coreset to csv
+#            coreset_df = pd.DataFrame(X[selected_indices], columns=features)
+#            coreset_df[target] = y[selected_indices]
+#
+#            coreset_df.to_csv(out_file, index=False)
+#            print(f"DeepCore subset saved to {out_file}")
         except Exception as e:
             print(f"Fehler beim Verarbeiten von {filename}: {e}")
             continue

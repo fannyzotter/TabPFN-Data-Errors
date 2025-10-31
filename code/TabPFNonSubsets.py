@@ -34,13 +34,13 @@ def logfile_path(dataset_name, method):
     subsets = method + "Subsets"
     input_root = "../" + subsets + "/" + dataset_name
 
-    output_log = dir_path + dataset_name + "Log" + method + ".csv"
+    output_log = dir_path + dataset_name + "Log2" + method + ".csv"
 
     if not os.path.exists(dir_path):
         #if no directory exists, create it
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         with open(output_log, "w") as f:
-            f.write("dataset,subset_path,subset_name,n_samples,n_features,test_acc,balanced_acc,precision,recall,f1,roc_auc,mcc,kappa,log_loss,inference_time_sec,status\n")
+            f.write("dataset,subset_path,subset_name,n_samples,n_features,balanced_acc,f1,roc_auc,inference_time_sec,status\n")
 
     return input_root, output_log
 
@@ -96,21 +96,20 @@ def calc_tabpfn(dataset_name, method):
             try:
                 signal.alarm(timeout_sec)  # Timeout setzen
                 y_pred, duration = run_tabpfn(X_train, y_train, X_test)
-                acc = metrics.accuracy_score(y_test, y_pred)
+                #acc = metrics.accuracy_score(y_test, y_pred)
                 balanced_acc = metrics.balanced_accuracy_score(y_test, y_pred)
-                precision = metrics.precision_score(y_test, y_pred, average="binary")
-                recall = metrics.recall_score(y_test, y_pred, average="binary")
+                #precision = metrics.precision_score(y_test, y_pred, average="binary")
+                #recall = metrics.recall_score(y_test, y_pred, average="binary")
                 f1 = metrics.f1_score(y_test, y_pred, average="binary")
                 roc_auc = metrics.roc_auc_score(y_test, y_pred)
-                mcc = metrics.matthews_corrcoef(y_test, y_pred)
-                kappa = metrics.cohen_kappa_score(y_test, y_pred)
+                #mcc = metrics.matthews_corrcoef(y_test, y_pred)
+                #kappa = metrics.cohen_kappa_score(y_test, y_pred)
                 status="ok"
                 signal.alarm(0)            # Timeout wieder ausschalten
             except TimeoutException:
                 print(f"⏱️ Timeout bei {subset_path}")
                 status = "timeout"
-                acc = balanced_acc = precision = recall = f1 = roc_auc = mcc = kappa = ""
+                balanced_acc = f1 = roc_auc = ""
                 duration = timeout_sec
             with open(output_file, "a") as f:
-                f.write(f"{dataset},{subset_path},{subset_name},{df.shape[0]},{df.shape[1]-1},{acc},{balanced_acc},{precision},{recall},{f1},{roc_auc},{mcc},{kappa},{duration},{status}\n")
-
+                f.write(f"{dataset},{subset_path},{subset_name},{df.shape[0]},{df.shape[1]-1},{balanced_acc},{f1},{roc_auc} ,{duration},{status}\n")
