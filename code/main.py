@@ -1,7 +1,10 @@
 import os
-import pandas as pd
+#import pandas as pd
 from pathlib import Path
 import sys
+
+BaseDir = Path(os.getcwd()).parent
+sys.path.append(str(BaseDir))
 
 # Importiere alle Module
 from code.convertARFFtoCSV import initialize_datasets
@@ -20,13 +23,18 @@ IMLFunktionen = {
     "ALE": False,
     "Conformal": False,
     "Counterfactuals": False,
-    "Data_Shapley": True,
+    "Data_Shapley": False,
     "DCA": False,
     "ICE_PD": False,
     "SHAP_Package": False,
     "SHAP": False,
-    "LOCO": False,
-    "Sensitivity": False
+    "LOCO": True,
+    "Sensitivity": False,
+    "OptimalSubset_roc": True,
+    "OptimalSubset_b_acc": False,
+    "OptimalSubset_f1": False,
+    "OptimalSubset_ece": False, 
+    "OptimalSubset_mce": False
 }
 
 def main(datasetname):
@@ -55,7 +63,7 @@ def main(datasetname):
         #print(f"Erstelle DeepCore Subsets für: {name}")
         #run_deepcore_subset(name, Path(os.getcwd()))
 
-        #runIMLFunctions(name, Path(os.getcwd()), IMLFunktionen)
+        runIMLFunctions(name, Path(os.getcwd()), IMLFunktionen)
 
         #print(f"Führe TabPFN auf kCenter für: {name} aus")
         #calc_tabpfn(name, method="kCenter")
@@ -63,8 +71,8 @@ def main(datasetname):
         #print(f"Führe TabPFN auf LOCO für: {name} aus")
         #calc_tabpfn_iml(name, IMLFunktionen)
 
-        print("plotAllLevel.py wird aufgerufen")
-        plotAllLevels(name, IMLFunktionen)
+        #print("plotAllLevel.py wird aufgerufen")
+        #plotAllLevels(name, IMLFunktionen)
 
 
 if __name__ == "__main__":

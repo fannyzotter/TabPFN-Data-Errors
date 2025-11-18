@@ -1,0 +1,14 @@
+HX711: 427458, weight: 9982.28
+
+Temperatur: 17.69 °C
+HX711: 414611, weight: 9445.59
+
+Temperatur: 17.69 °C
+HX711: 414892, weight: 9457.33
+
+Temperatur: 17.69 °C
+HX711: 427094, weight: 9967.07
+
+Temperatur: 17.69 °C
+HX711: 427532, weight: 9985.37
+

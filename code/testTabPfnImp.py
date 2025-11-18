@@ -6,10 +6,14 @@ import re
 
 from pathlib import Path
 import os
+import sys 
+sys.path.append(str(Path(os.getcwd()).parent.parent))
+print(sys.path)#.append(str(Path(os.getcwd()).parent.parent)))
+
 
 from external.tabpfn_iml.tabpfniml.datasets.datasets import ArrayData
 
-from external.tabpfn_iml.tabpfniml.methods.ale import ALE
+#from external.tabpfn_iml.tabpfniml.methods.ale import ALE
 from external.tabpfn_iml.tabpfniml.methods.conformal_pred import Conformal_Prediction
 from external.tabpfn_iml.tabpfniml.methods.counterfactuals import Counterfactuals
 from external.tabpfn_iml.tabpfniml.methods.data_shapley import Data_Shapley
@@ -19,6 +23,8 @@ from external.tabpfn_iml.tabpfniml.methods.kernel_shap_package import SHAP_Packa
 from external.tabpfn_iml.tabpfniml.methods.kernel_shap import SHAP
 from external.tabpfn_iml.tabpfniml.methods.loco import LOCO
 from external.tabpfn_iml.tabpfniml.methods.sensitivity import Sensitivity
+from external.tabpfn_iml.tabpfniml.methods.interpret import TabPFN_Interpret
+
 
 N_ensemble_configurations=1
 device="cuda"
@@ -31,7 +37,7 @@ def runIMLFunctions(dataset_name, base_dir, IMLFunktionen):
 
     if IMLFunktionen.get("ALE", True):
         print(f"Führe ALE auf: {dataset_name} aus")
-        tryAle(dataset_name, base_dir) #yes runs until boxplots no idea what they mean
+        #tryAle(dataset_name, base_dir) #yes runs until boxplots no idea what they mean
     
     if IMLFunktionen.get("Conformal", True):
         print(f"Führe Conformal Prediction auf: {dataset_name} aus")
@@ -69,6 +75,12 @@ def runIMLFunctions(dataset_name, base_dir, IMLFunktionen):
         print(f"Führe Sensitivity auf: {dataset_name} aus")
         trySensitivity(dataset_name, base_dir) #no as of now because of store_gradiants=True did not work look into storage of the X and X_train arrays there is a dimension missing
 
+    if IMLFunktionen.get("OptimalSubset_roc", True):
+        print(f"Führe Optimal Subset ROC auf: {dataset_name} aus")
+        tryOptimalSubset_roc(dataset_name, base_dir)
+
+
+
 def tryAle(dataset_name, base_dir):
     input_path = base_dir / "datasets" / dataset_name
     output_root = base_dir / "ImlAleSubsets"
@@ -88,12 +100,12 @@ def tryAle(dataset_name, base_dir):
         data_train = round(0.8 * array_data.X_df.shape[0])
         data_test = round(0.2 * array_data.X_df.shape[0])
 
-        sens_obj = ALE(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
-        sens_obj.fit(compute_wrt_feature=True,
-             compute_wrt_observation=True,
-             loss_based=True,
-             pred_based=True)
-        sens_obj.boxplot()
+        #sens_obj = ALE(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
+        #sens_obj.fit(compute_wrt_feature=True,
+        #     compute_wrt_observation=True,
+        #     loss_based=True,
+        #     pred_based=True)
+        #sens_obj.boxplot()
 
 def tryConformalPred(dataset_name, base_dir):
     input_path = base_dir / "datasets" / dataset_name
@@ -220,8 +232,10 @@ def tryDataShap(dataset_name, base_dir):
             print(f"gesuchte Teilmenge: {subset_size} Beispiele")
             print(f"Anzahl Trainingsbeispiele: {data_train} Beispiele")
             print(f"Class to predict: {class_to_predict}")
-            sens_obj = Data_Shapley(data=array_data, n_train=min(1024, data_train), n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
-            sens_obj.fit(tPFN_train_max=subset_size)
+            mfactor = int(data_train / subset_size) + 1
+            print(f"Gesuchter M-Faktor: {mfactor}, {1/mfactor}% der Trainingsdaten")
+            sens_obj = Data_Shapley(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
+            sens_obj.fit(M_factor=1/mfactor, tPFN_train_max=subset_size)
             indices = sens_obj.get_optimized_context()
             #save subset
 
@@ -299,8 +313,8 @@ def tryLOCO(dataset_name, base_dir):
         #skip file if it is in output directory
         if (scores_path.exists()):
             print("skipping file ", basename)
-        else :
-
+        
+        else:
             X = file_data.iloc[:, :-1]
             y = file_data.iloc[:, -1]
 
@@ -311,12 +325,12 @@ def tryLOCO(dataset_name, base_dir):
             data_test = round(0.1 * array_data.X_df.shape[0])
             class_to_predict = len(file_data.columns) - 1
             print(f"Class to predict: {class_to_predict}")
-            loo = LOCO(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
+            loo = LOCO(data=array_data, n_train=min(1024,data_train), n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
             loo.fit(compute_wrt_feature=False,
                 compute_wrt_observation=True,
                 loss_based=True, # calc importance
                 pred_based=True, # calc effect
-                n_train_relevance = data_train,
+                n_train_relevance = min(1024,data_train),
                 class_to_be_explained=1)
                     # ---- nach loo.fit(...) einfügen ----
 
@@ -385,9 +399,9 @@ def tryLOCO(dataset_name, base_dir):
             all_meta.append(meta)
             print(f"[LOO] {basename}: Core-Set mit {k} Punkten gespeichert → {subset_path}")
 
+
     with open(meta_path, "w") as f:
         json.dump(all_meta, f, indent=2)
-
 
 def trySensitivity(dataset_name, base_dir):
     input_path = base_dir / "datasets" / dataset_name
@@ -415,3 +429,28 @@ def trySensitivity(dataset_name, base_dir):
              pred_based=True, 
              class_to_be_explained=1)
         sens_obj.boxplot()
+
+
+def tryOptimalSubset_roc(dataset_name, base_dir):
+    input_path = base_dir / "datasets" / dataset_name
+    output_root = base_dir / "ImlOptimalSubsetRoc"
+
+    for filename in os.listdir(input_path):
+        print(f"Verarbeite Datei: {filename}")
+        file_path = input_path / filename
+        file_data = pd.read_csv(file_path)
+
+        X = file_data.iloc[:, :-1]
+        y = file_data.iloc[:, -1]
+
+        #create ArrayData object
+        array_data = ArrayData(dataset_name, X, y, feature_names=X.columns, categorical_features_idx=[])
+
+        data_train = round(0.8 * array_data.X_df.shape[0])
+        data_test = round(0.2 * array_data.X_df.shape[0])
+        class_to_predict = len(file_data.columns) - 1
+        print(f"Class to predict: {class_to_predict}")
+
+        loo = LOCO(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
+        values = loo.fit_optimal_subset(metric="roc")
+        print(values)

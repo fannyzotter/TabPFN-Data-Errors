@@ -7,9 +7,9 @@
 
 import pandas as pd
 from scipy.io import arff
-from badgers.generators.tabular_data.noise import GaussianNoiseGenerator
-from badgers.generators.tabular_data.missingness import MissingCompletelyAtRandom
-from badgers.generators.tabular_data.outliers import HypersphereSamplingGenerator
+from external.badgers.badgers.generators.tabular_data.noise import GaussianNoiseGenerator
+from external.badgers.badgers.generators.tabular_data.missingness import MissingCompletelyAtRandom
+from external.badgers.badgers.generators.tabular_data.outliers import HypersphereSamplingGenerator
 
 from numpy.random import default_rng
 from pathlib import Path
