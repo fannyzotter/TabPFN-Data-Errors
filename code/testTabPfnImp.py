@@ -325,12 +325,12 @@ def tryLOCO(dataset_name, base_dir):
             data_test = round(0.1 * array_data.X_df.shape[0])
             class_to_predict = len(file_data.columns) - 1
             print(f"Class to predict: {class_to_predict}")
-            loo = LOCO(data=array_data, n_train=min(1024,data_train), n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
+            loo = LOCO(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
             loo.fit(compute_wrt_feature=False,
                 compute_wrt_observation=True,
                 loss_based=True, # calc importance
                 pred_based=True, # calc effect
-                n_train_relevance = min(1024,data_train),
+                n_train_relevance = data_train,
                 class_to_be_explained=1)
                     # ---- nach loo.fit(...) einfügen ----
 
@@ -430,10 +430,13 @@ def trySensitivity(dataset_name, base_dir):
              class_to_be_explained=1)
         sens_obj.boxplot()
 
-
 def tryOptimalSubset_roc(dataset_name, base_dir):
     input_path = base_dir / "datasets" / dataset_name
     output_root = base_dir / "ImlOptimalSubsetRoc"
+
+    #make output root if not exists
+    if not output_root.exists():
+        output_root.mkdir(parents=True, exist_ok=True)
 
     for filename in os.listdir(input_path):
         print(f"Verarbeite Datei: {filename}")
@@ -451,6 +454,22 @@ def tryOptimalSubset_roc(dataset_name, base_dir):
         class_to_predict = len(file_data.columns) - 1
         print(f"Class to predict: {class_to_predict}")
 
-        loo = LOCO(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
-        values = loo.fit_optimal_subset(metric="roc")
-        print(values)
+        try:
+            loo = LOCO(data=array_data, n_train=data_train, n_test=data_test, device=device, N_ensemble_configurations=N_ensemble_configurations)
+            values_roc = loo.find_optimal_train_subset(metric="roc_auc", reinit=True, n_train=min(500, data_train), n_attempts=10)
+
+
+            output_file = output_root / f"{dataset_name}_optimal_subset_roc.csv"
+            print(values_roc.columns)
+            balanced_acc = values_roc['Score'].where(values_roc['Score'].index == 'Balanced accuracy').dropna().values[0]
+            f1 = values_roc['Score'].where(values_roc['Score'].index == 'F1-score').dropna().values[0]
+            roc_auc = values_roc['Score'].where(values_roc['Score'].index == 'ROC AUC').dropna().values[0]
+            ece = values_roc['Score'].where(values_roc['Score'].index == 'ECE').dropna().values[0]
+            mce = values_roc['Score'].where(values_roc['Score'].index == 'MCE').dropna().values[0]
+            duration = values_roc['Score'].where(values_roc['Score'].index == 'Prediction time in seconds').dropna().values[0]
+
+            #make file if not exists
+            with open(output_file, "a") as f:
+                f.write(f"{filename},{array_data.X_df.shape[0]},{array_data.X_df.shape[1]},{balanced_acc},{f1},{roc_auc},{ece},{mce},{duration},clear\n")
+        except Exception as e:
+            print(f"Fehler bei der Verarbeitung von {filename}: {e}")

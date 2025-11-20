@@ -17,7 +17,7 @@ from code.testDeepCore import run_deepcore_subset
 from code.testTabPfnImp import runIMLFunctions
 from code.plotAllLevel import plotAllLevels
 
-subset_size = 500 
+subset_size = 10000
 
 IMLFunktionen = {
     "ALE": False,
@@ -28,7 +28,7 @@ IMLFunktionen = {
     "ICE_PD": False,
     "SHAP_Package": False,
     "SHAP": False,
-    "LOCO": True,
+    "LOCO": False,
     "Sensitivity": False,
     "OptimalSubset_roc": True,
     "OptimalSubset_b_acc": False,
@@ -55,7 +55,7 @@ def main(datasetname):
         #apply_noise_and_save(name, Path(os.getcwd()))
 
         #print(f"Erstelle Random Subsets für: {name}")
-        #create_random_subsets(name, Path(os.getcwd()), n_subsets=3, subset_size=subset_size)
+        #create_random_subsets(name, Path(os.getcwd()), n_subsets=10, subset_size=subset_size)
         
         #print(f"Erstelle k-Center Subsets für: {name}")
         #create_kcenter_subsets(name, Path(os.getcwd()), k=subset_size)
@@ -63,16 +63,16 @@ def main(datasetname):
         #print(f"Erstelle DeepCore Subsets für: {name}")
         #run_deepcore_subset(name, Path(os.getcwd()))
 
-        runIMLFunctions(name, Path(os.getcwd()), IMLFunktionen)
+        #runIMLFunctions(name, Path(os.getcwd()), IMLFunktionen)
 
-        #print(f"Führe TabPFN auf kCenter für: {name} aus")
-        #calc_tabpfn(name, method="kCenter")
+        print(f"Führe TabPFN auf random für: {name} aus")
+        calc_tabpfn(name, method="random")
 
         #print(f"Führe TabPFN auf LOCO für: {name} aus")
         #calc_tabpfn_iml(name, IMLFunktionen)
 
-        #print("plotAllLevel.py wird aufgerufen")
-        #plotAllLevels(name, IMLFunktionen)
+        print("plotAllLevel.py wird aufgerufen")
+        plotAllLevels(name, IMLFunktionen)
 
 
 if __name__ == "__main__":

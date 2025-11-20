@@ -27,12 +27,13 @@ timeout_sec = 180  # Max. Laufzeit pro Subset in Sekunden
 
 def logfile_path(dataset_name, method):
     print(f"Logfile für {dataset_name} mit Methode {method} wird erstellt")
-    dir_path = "../results/" + method + "/"
+    dir_path = "results/" + method + "/"
+    print(f"Verzeichnis-Pfad: {dir_path}")
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
     subsets = method + "Subsets"
-    input_root = "../" + subsets + "/" + dataset_name
+    input_root = subsets + "/" + dataset_name
 
     output_log = dir_path + dataset_name + "Log2" + method + ".csv"
 
@@ -49,11 +50,12 @@ def logfile_path(dataset_name, method):
 def run_tabpfn(X_train, y_train, X_test):
     clf = TabPFNClassifier(device="cuda", n_estimators=4)
     start_time = time.time()
-    clf.fit(X_train, y_train)
-    emb = clf.get_embeddings(X_test, data_source="test")
-    print("Embeddings shape:", emb.shape)
-    y_pred = clf.predict(X_test)
-    y_proba = clf.predict_proba(X_test)
+    try:
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+    except Exception as e:
+        print(f"Fehler beim Fit und predict: {e}")
+        return None, None
     duration = time.time() - start_time
     return y_pred, duration
 
@@ -89,21 +91,20 @@ def calc_tabpfn(dataset_name, method):
             X = df.iloc[:, :-1].values
             y = df.iloc[:, -1].values
 
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, stratify=y if len(set(y)) > 1 else None
-            )
+            try:
+                X_train, X_test, y_train, y_test = train_test_split(
+                   X, y, test_size=test_size, stratify=y if len(set(y)) > 1 else None
+                )
+            except Exception as e:
+                print(f"❌ Fehler bei train_test_split für {subset_path}: {e}")
+                continue
 
             try:
                 signal.alarm(timeout_sec)  # Timeout setzen
                 y_pred, duration = run_tabpfn(X_train, y_train, X_test)
-                #acc = metrics.accuracy_score(y_test, y_pred)
                 balanced_acc = metrics.balanced_accuracy_score(y_test, y_pred)
-                #precision = metrics.precision_score(y_test, y_pred, average="binary")
-                #recall = metrics.recall_score(y_test, y_pred, average="binary")
                 f1 = metrics.f1_score(y_test, y_pred, average="binary")
                 roc_auc = metrics.roc_auc_score(y_test, y_pred)
-                #mcc = metrics.matthews_corrcoef(y_test, y_pred)
-                #kappa = metrics.cohen_kappa_score(y_test, y_pred)
                 status="ok"
                 signal.alarm(0)            # Timeout wieder ausschalten
             except TimeoutException:

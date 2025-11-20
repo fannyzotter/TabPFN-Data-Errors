@@ -22,7 +22,12 @@ def initialize_datasets(rootpath: Path):
                 print(dataset.count)
             df = pd.DataFrame(dataset[0])
             df = df.applymap(lambda x: x.decode("utf-8") if isinstance(x, bytes) else x)
-            df = df.astype(int)
+            df = df.replace({"True": 1, "False": 0})
+            try:
+                df = df.astype(float)
+            except ValueError:
+                print(f"⚠️ Warnung: Einige Werte in {name} konnten nicht in float konvertiert werden.")
+                print(ValueError.args)
 
             print(f"Converted ARFF to DataFrame with shape: {df.shape}")
             print(df.head())
